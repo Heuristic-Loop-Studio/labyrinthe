@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#080c0d" />
+    <meta name="description" content="Un labyrinthe dans le noir. Trois ondes sonores pour révéler les murs et trouver la sortie. Un prototype 3D pour ordinateur et téléphone." />
+    <title>ÉCHO — Voir avec le son</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23080c0d'/%3E%3Cg fill='none' stroke='%23b6f9c8' stroke-width='3'%3E%3Ccircle cx='32' cy='32' r='19'/%3E%3Ccircle cx='32' cy='32' r='11'/%3E%3C/g%3E%3Ccircle cx='32' cy='32' r='3' fill='%23b6f9c8'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <symbol id="icon-logo" viewBox="0 0 40 40"><circle cx="20" cy="20" r="17"/><circle cx="20" cy="20" r="10"/><circle cx="20" cy="20" r="3" fill="currentColor" stroke="none"/><path d="M20 0v7M20 33v7M0 20h7M33 20h7"/></symbol>
+      <symbol id="icon-short" viewBox="0 0 32 32"><circle cx="16" cy="16" r="3" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="9"/></symbol>
+      <symbol id="icon-medium" viewBox="0 0 32 32"><circle cx="16" cy="16" r="2" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="7"/><circle cx="16" cy="16" r="13"/></symbol>
+      <symbol id="icon-long" viewBox="0 0 32 32"><circle cx="16" cy="16" r="1.7" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="5"/><circle cx="16" cy="16" r="9.5"/><circle cx="16" cy="16" r="14"/></symbol>
+      <symbol id="icon-sound" viewBox="0 0 24 24"><path d="m11 5-5 4H3v6h3l5 4zM15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/></symbol>
+      <symbol id="icon-muted" viewBox="0 0 24 24"><path d="m11 5-5 4H3v6h3l5 4zM16 9l6 6M22 9l-6 6"/></symbol>
+      <symbol id="icon-fullscreen" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"/></symbol>
+      <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+      <symbol id="icon-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M5 9h1m3 0h1m3 0h1m3 0h2M5 12h1m3 0h1m3 0h1m3 0h2M7 15h10"/></symbol>
+      <symbol id="icon-touch" viewBox="0 0 24 24"><path d="M9 13V5a2 2 0 0 1 4 0v6l2-1 5 3v5l-4 4h-6l-6-7a2 2 0 0 1 3-2l2 2"/></symbol>
+      <symbol id="icon-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+    </svg>
+
+    <main id="app" class="game-app">
+      <canvas id="world" aria-label="Labyrinthe 3D : les ondes révèlent les murs dans l’obscurité."></canvas>
+      <div class="ambient-grid" aria-hidden="true"></div>
+      <div class="vignette" aria-hidden="true"></div>
+      <div id="pulse-flash" class="pulse-flash" aria-hidden="true"></div>
+
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="ÉCHO, accueil">
+          <svg class="brand-mark" aria-hidden="true"><use href="#icon-logo"/></svg>
+          <span class="brand-name">ÉCHO<span class="brand-description">SONAR EXPLORER</span></span>
+        </a>
+        <div class="system-status"><span class="status-dot"></span><span id="system-label">SYSTÈME PRÊT</span><span class="status-divider">/</span><span id="sector-label">SECTEUR 01</span></div>
+        <div class="header-actions">
+          <span class="prototype-tag">PROTOTYPE <span>01</span></span>
+          <button id="pause-button" class="icon-button running-only" aria-label="Mettre le jeu en pause" title="Pause (Échap)"><svg aria-hidden="true"><use href="#icon-pause"/></svg></button>
+          <button id="sound-button" class="icon-button" aria-label="Couper le son" aria-pressed="false" title="Activer / couper le son (M)"><svg aria-hidden="true"><use id="sound-icon" href="#icon-sound"/></svg></button>
+          <button id="fullscreen-button" class="icon-button fullscreen-button" aria-label="Passer en plein écran" title="Plein écran"><svg aria-hidden="true"><use href="#icon-fullscreen"/></svg></button>
+          <button id="help-button" class="icon-button help-button" aria-label="Afficher les commandes" title="Commandes (H)">?</button>
+        </div>
+      </header>
+
+      <section id="intro" class="intro" aria-labelledby="intro-title">
+        <div class="intro-content">
+          <div class="eyebrow"><span class="tiny-cross">+</span> EXPÉRIENCE D’EXPLORATION SONORE</div>
+          <h1 id="intro-title">Voir avec<br /><em>le son.</em></h1>
+          <p class="intro-description">Un labyrinthe. Aucune lumière.<br />Émettez une onde, révélez les murs.<br />Trouvez votre chemin avant que tout s’efface.</p>
+          <button id="start-button" class="primary-button"><span>Entrer dans le noir</span><svg aria-hidden="true"><use href="#icon-arrow"/></svg></button>
+          <div class="device-hints"><span><svg aria-hidden="true"><use href="#icon-keyboard"/></svg> Clavier & souris</span><span class="hint-separator">·</span><span><svg aria-hidden="true"><use href="#icon-touch"/></svg> Écran tactile</span></div>
+        </div>
+        <div class="sonar-art" aria-hidden="true">
+          <span class="art-label art-label-top">CHAMP DE RÉSONANCE</span>
+          <svg class="radar-svg" viewBox="0 0 480 480" fill="none">
+            <defs>
+              <radialGradient id="radar-fill"><stop stop-color="#b6f9c8" stop-opacity=".045"/><stop offset="1" stop-color="#b6f9c8" stop-opacity="0"/></radialGradient>
+              <linearGradient id="maze-gradient" x1="140" y1="400" x2="330" y2="90" gradientUnits="userSpaceOnUse"><stop stop-color="#b6f9c8" stop-opacity=".06"/><stop offset=".5" stop-color="#b6f9c8" stop-opacity=".6"/><stop offset="1" stop-color="#b6f9c8" stop-opacity=".12"/></linearGradient>
+              <clipPath id="radar-clip"><circle cx="240" cy="240" r="168"/></clipPath>
+            </defs>
+            <circle cx="240" cy="240" r="211" fill="url(#radar-fill)" stroke="#b6f9c8" stroke-opacity=".12"/>
+            <circle cx="240" cy="240" r="168" stroke="#b6f9c8" stroke-opacity=".14"/>
+            <circle cx="240" cy="240" r="112" stroke="#b6f9c8" stroke-opacity=".09" stroke-dasharray="3 7"/>
+            <circle cx="240" cy="240" r="56" stroke="#b6f9c8" stroke-opacity=".12"/>
+            <path d="M240 12v36M240 432v36M12 240h36M432 240h36M85 85l18 18M377 377l18 18M85 395l18-18M377 103l18-18" stroke="#b6f9c8" stroke-opacity=".3"/>
+            <path d="M240 48v384M48 240h384" stroke="#b6f9c8" stroke-opacity=".06"/>
+            <g clip-path="url(#radar-clip)" stroke="url(#maze-gradient)" stroke-width="1.5" stroke-linecap="square">
+              <path d="M100 100h280v280H100zM100 140h80v40h40v-80M260 100v40h80v40h40M140 180v80h-40M180 220h80v-40h40v80h80M140 300h40v-40h40v80h80v-40h40v80M180 380v-40h-40M220 380v-40M340 220h40M100 340h40M260 140v40M180 140v-40M300 100v40M340 140v-40M140 220h40v-40M220 220v-40M260 260v40h40M340 260v40h40"/>
+            </g>
+            <g class="radar-sweep"><path d="M240 240 389 91" stroke="#b6f9c8" stroke-opacity=".65"/><path d="M240 240 389 91A211 211 0 0 0 240 29z" fill="#b6f9c8" fill-opacity=".025"/></g>
+            <circle class="radar-ping" cx="240" cy="240" r="36" stroke="#b6f9c8" stroke-opacity=".5"/>
+            <circle cx="240" cy="240" r="5" fill="#b6f9c8"/>
+            <circle cx="240" cy="240" r="10" stroke="#b6f9c8" stroke-opacity=".3"/>
+            <circle cx="300" cy="180" r="3" fill="#b6f9c8" fill-opacity=".8"/>
+          </svg>
+          <div class="art-label art-label-bottom"><span class="status-dot"></span> SIGNAL ACTIF<span class="art-coordinate">X 00.00 / Y 00.00</span></div>
+          <span class="radar-number radar-number-top">00</span><span class="radar-number radar-number-right">90</span><span class="radar-number radar-number-bottom">180</span><span class="radar-number radar-number-left">270</span>
+        </div>
+      </section>
+
+      <div class="game-telemetry running-only"><div class="telemetry-label">EXPLORATION</div><div class="exploration-value"><span id="exploration-value">00</span><span>%</span></div><div class="exploration-track"><span id="exploration-bar"></span></div><div id="compass" class="compass">N · 000°</div></div>
+      <div class="crosshair running-only" aria-hidden="true"><span></span></div>
+      <div id="game-hint" class="game-hint" role="status">Le noir vous entoure.<span>Émettez une onde pour voir.</span></div>
+      <div id="echo-label" class="echo-label" role="status"></div>
+
+      <section class="wave-dock" aria-label="Ondes sonores">
+        <div class="dock-heading"><span class="dock-line"></span><span id="dock-caption">VOTRE LUMIÈRE, C’EST LE SON</span><span class="dock-line"></span></div>
+        <div class="wave-buttons">
+          <button class="wave-button wave-short" data-wave="0" aria-label="Émettre une onde courte : portée 4 mètres, lumière 1 seconde" aria-disabled="true">
+            <span class="wave-top"><svg class="wave-icon" aria-hidden="true"><use href="#icon-short"/></svg><span class="wave-key">1</span></span>
+            <span class="wave-name">Courte<span class="wave-indicator"></span></span>
+            <span class="wave-details"><span>04 <small>m</small></span><span class="wave-detail-divider">/</span><span>1 <small>sec</small></span></span>
+            <span class="cooldown-fill"></span>
+          </button>
+          <button class="wave-button wave-medium" data-wave="1" aria-label="Émettre une onde moyenne : portée 8 mètres, lumière 2 secondes" aria-disabled="true">
+            <span class="wave-top"><svg class="wave-icon" aria-hidden="true"><use href="#icon-medium"/></svg><span class="wave-key">2</span></span>
+            <span class="wave-name">Moyenne<span class="wave-indicator"></span></span>
+            <span class="wave-details"><span>08 <small>m</small></span><span class="wave-detail-divider">/</span><span>2 <small>sec</small></span></span>
+            <span class="cooldown-fill"></span>
+          </button>
+          <button class="wave-button wave-long" data-wave="2" aria-label="Émettre une onde longue : portée 14 mètres, lumière 4 secondes" aria-disabled="true">
+            <span class="wave-top"><svg class="wave-icon" aria-hidden="true"><use href="#icon-long"/></svg><span class="wave-key">3</span></span>
+            <span class="wave-name">Longue<span class="wave-indicator"></span></span>
+            <span class="wave-details"><span>14 <small>m</small></span><span class="wave-detail-divider">/</span><span>4 <small>sec</small></span></span>
+            <span class="cooldown-fill"></span>
+          </button>
+        </div>
+        <div id="dock-hint" class="dock-hint">Trois portées. Trois façons de lire l’obscurité.</div>
+      </section>
+
+      <div id="touch-controls" class="touch-controls running-only">
+        <div id="joystick" class="joystick" aria-label="Joystick tactile pour se déplacer"><span class="joystick-cross horizontal"></span><span class="joystick-cross vertical"></span><span id="joystick-thumb" class="joystick-thumb"></span></div>
+        <span class="joystick-label">DÉPLACEMENT</span>
+      </div>
+      <div id="look-hint" class="look-hint running-only"><svg aria-hidden="true"><use href="#icon-touch"/></svg><span>GLISSEZ POUR REGARDER</span></div>
+
+      <footer class="bottom-bar"><span class="footer-left"><span class="status-dot"></span><span id="footer-state">IMMERSION 3D</span></span><span id="footer-tip" class="footer-tip">Un casque est recommandé.</span><span class="footer-right">OBJECTIF <span>TROUVER LA SORTIE</span><svg aria-hidden="true"><use href="#icon-arrow"/></svg></span></footer>
+
+      <section id="pause-overlay" class="modal-overlay" hidden aria-labelledby="pause-title"><div class="modal-card"><div class="eyebrow">CONNEXION INTERROMPUE</div><h2 id="pause-title">Signal suspendu.</h2><p>Votre position est sauvegardée.<br />Le labyrinthe vous attend dans le noir.</p><button id="resume-button" class="primary-button"><span>Reprendre l’exploration</span><svg aria-hidden="true"><use href="#icon-arrow"/></svg></button><button id="restart-button" class="text-button">Recommencer avec un nouveau labyrinthe</button></div></section>
+      <section id="win-overlay" class="modal-overlay" hidden aria-labelledby="win-title"><div class="modal-card win-card"><svg class="win-symbol" aria-hidden="true"><use href="#icon-logo"/></svg><div class="eyebrow">SIGNAL RETROUVÉ</div><h2 id="win-title">Enfin, la sortie.</h2><p>Vous avez donné une forme à l’obscurité.</p><div class="win-stats"><div><span id="win-time">00:00</span><small>TEMPS</small></div><div><span id="win-distance">0 m</span><small>PARCOURUS</small></div><div><span id="win-waves">0</span><small>ONDES</small></div></div><button id="play-again-button" class="primary-button"><span>Explorer un autre labyrinthe</span><svg aria-hidden="true"><use href="#icon-arrow"/></svg></button></div></section>
+
+      <dialog id="help-dialog" class="help-dialog"><div class="dialog-top"><span class="eyebrow">GUIDE D’EXPLORATION</span><button id="close-help" class="icon-button" aria-label="Fermer les commandes">×</button></div><h2>Écoutez. Observez. Avancez.</h2><p>Tout est noir. Les ondes se propagent depuis votre position et éclairent temporairement les murs. La sortie apparaît en vert plus vif lorsqu’une onde la touche.</p><div class="help-grid"><div><h3>Ordinateur</h3><dl><dt>Se déplacer</dt><dd>ZQSD / WASD / flèches</dd><dt>Regarder</dt><dd>Cliquer-glisser avec la souris</dd><dt>Mode immersif</dt><dd>Double-clic · Tab : curseur libre</dd><dt>Émettre une onde</dt><dd>1 / 2 / 3, ou les boutons</dd><dt>Pause</dt><dd>Échap</dd><dt>Son</dt><dd>M</dd></dl></div><div><h3>Téléphone</h3><dl><dt>Se déplacer</dt><dd>Joystick à gauche</dd><dt>Regarder</dt><dd>Glisser sur l’écran</dd><dt>Émettre une onde</dt><dd>Les trois boutons en bas</dd><dt>Pause</dt><dd>Bouton en haut de l’écran</dd></dl></div></div><div class="help-note">Les ondes traversent les murs, mais ne révèlent que les surfaces visibles depuis votre position. Les sons sont facultatifs. Attention : lueurs animées.</div><button id="help-done" class="primary-button">Compris, je suis prêt</button></dialog>
+      <div id="error-message" class="error-message" role="alert" hidden></div>
+      <noscript><div class="error-message">Activez JavaScript pour explorer le labyrinthe.</div></noscript>
+    </main>
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
